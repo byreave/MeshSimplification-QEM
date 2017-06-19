@@ -11,11 +11,14 @@
 #include "Mesh\boundary.h"
 #include "Mesh\iterators.h"
 #include "Parser\parser.h"
-
+#include "Eigen\Dense"
+#include <vector>
 #ifndef M_PI
 #define M_PI 3.141592653589793238
 #endif
 
+using Eigen::MatrixXd;
+using namespace std;
 namespace MeshLib
 {
 	class CMyVertex;
@@ -111,6 +114,31 @@ namespace MeshLib
 	{
 	};
 
+	class ValidPair
+	{
+	public:
+		ValidPair(CVertex * v1, CVertex * v2, bool isedge = false)
+		{
+			m_vertex[0] = v1;
+			m_vertex[1] = v2;
+			is_edge = isedge;
+		}
+		~ValidPair();
+		bool operator < (const ValidPair & vp)
+		{
+			return cost < vp.cost;
+		}
+		CVertex * & operator [] (int i)
+		{
+			assert(i > -1 && i < 2);
+			return m_vertex[i];
+		}
+	private:
+		CVertex * m_vertex[2];
+		double cost;
+		bool is_edge;
+	};
+
 	template<typename V, typename E, typename F, typename H>
 	class MyMesh : public CBaseMesh<V, E, F, H>
 	{
@@ -135,6 +163,13 @@ namespace MeshLib
 
 		void output_mesh_info();
 		void test_iterator();
+		vector<F *> faces_around_vertex(V * pV);
+		MatrixXd plane_equation(F * pF);
+		MatrixXd get_kp(MatrixXd m);
+		MatrixXd compute_q(vector<F *> facesVec);
+		MatrixXd compute_error(V * pV);
+		double compute_cost(MatrixXd v, MatrixXd mQ);
+		MatrixXd after_contraction(ValidPair vp);
 	};
 
 	typedef MyMesh<CMyVertex, CMyEdge, CMyFace, CMyHalfEdge> CMyMesh;
@@ -209,6 +244,137 @@ namespace MeshLib
 		//there are some other iterators which you can find them in class MyMesh
 
 		std::cout << "Iterators test OK.\n";
+	}
+	template<typename V, typename E, typename F, typename H>
+	vector<F *> MyMesh<V, E, F, H>::faces_around_vertex(V * pV)
+	{
+		H * pH = pV->halfedge();
+		H * pH_next = pH->next()->sym();
+		vector<F *> facesVec;
+		facesVec.push_back(pH->face());
+		//traverse all faces, pV->halfedge() is a most ccw in-coming halfedge
+		//thus we don't need traverse clwly
+		while (pH_next != NULL && pH_next != pH)
+		{
+			facesVec.push_back(pH_next->face());
+			pH_next = pH_next->next()->sym();
+		}
+		return facesVec;
+	}
+
+	template<typename V, typename E, typename F, typename H>
+	MatrixXd MyMesh<V, E, F, H>::plane_equation(F * pF)
+	{
+		MatrixXd x(1, 4);
+		MatrixXd A(3, 4);
+		
+		V * pV1 = pF->halfedge()->source();
+		V * pV2 = pF->halfedge()->target();
+		V * pV3 = pF->halfedge()->next()->target();
+		//construct A matrix
+		A << pV1->point()[0], pV1->point()[1], pV1->point()[2], 1,
+			pV2->point()[0], pV2->point()[1], pV2->point()[2], 1,
+			pV3->point()[0], pV3->point()[1], pV3->point()[2], 1;
+		//solve linear equation Ax = B to get the plane equation
+		x = A.lu().solve(MatrixXd::Zero(1, 4));
+		//normalize x to let a^2 + b^2 + c^2 = 1
+		//note that in eigen matrix starts at 0, not 1
+		double sum = x(0, 0) * x(0, 0) + x(0, 1) * x(0, 1) + x(0, 2) * x(0, 2);
+		x /= sqrt(sum);
+
+		return x;
+	}
+
+	template<typename V, typename E, typename F, typename H>
+	MatrixXd MyMesh<V, E, F, H>::get_kp(MatrixXd m)
+	{
+		return m * m.adjoint();
+	}
+
+	template<typename V, typename E, typename F, typename H>
+	MatrixXd MyMesh<V, E, F, H>::compute_q(vector<F *> facesVec)
+	{
+		MatrixXd Q = MatrixXd::Zero(4, 4);
+		for (vector::iterator it = facesVec.begin(); it != facesVec.end(); ++it)
+		{
+			Q += get_kp(plane_equation(*it));
+		}
+		return Q;
+	}
+
+	template<typename V, typename E, typename F, typename H>
+	MatrixXd MyMesh<V, E, F, H>::compute_error(V * pV)
+	{
+		return compute_q(faces_around_vertex(pV));
+	}
+	
+	/*
+	cost = v' * Q * v
+	*/
+	template<typename V, typename E, typename F, typename H>
+	double MyMesh<V, E, F, H>::compute_cost(MatrixXd v, MatrixXd mQ)
+	{
+		return v.adjoint() * mQ * v;
+	}
+
+	/*
+	returns the position (x, y, z, 1) of a vertex after contraction
+	param 1 is the Q matrix of v1 + v2
+	*/
+	template<typename V, typename E, typename F, typename H>
+	MatrixXd MyMesh<V, E, F, H>::after_contraction(ValidPair vp)
+	{
+		MatrixXd mQ = compute_error(vp[0]) + compute_error(vp[1]);
+		MatrixXd v(4, 1);
+		MatrixXd A(4, 4);
+		MatrixXd B(4, 1);
+		//construct A
+		A << mQ(0, 0), mQ(0, 1), mQ(0, 2), mQ(0, 3),
+			mQ(1, 0), mQ(1, 1), mQ(1, 2), mQ(1, 3),
+			mQ(2, 0), mQ(2, 1), mQ(2, 2), mQ(2, 3),
+			0, 0, 0, 1;
+		//if A is invertible
+		if (A.determinant() != 0)
+		{
+			//construct B
+			B << 0, 0, 0, 1;
+			//solve the equation Ax = B
+			v = A.lu().solve(B);
+			return v
+		}
+		else //If the matrix is not invertible, then we can simply choose the optimal v
+			//along the segment v1 v2.
+		{
+			double cost = 100000.0;
+			float final_k = -1.0;
+			for (float k = 0; k <= 1; k += 0.05)
+			{
+				v(0, 0) = (1 - k) * vp[0]->point()[0] + k * vp[1]->point()[0];
+				v(1, 0) = (1 - k) * vp[0]->point()[1] + k * vp[1]->point()[1];
+				v(2, 0) = (1 - k) * vp[0]->point()[2] + k * vp[1]->point()[2];
+				v(3, 0) = 1;
+
+				double tmp_cost = compute_cost(v, mQ);
+				if (cost >= tmp_cost)
+				{
+					final_k = k;
+					cost = tmp_cost;
+				}
+			}
+			if (final_k != -1.0)
+			{
+				v(0, 0) = (1 - final_k) * vp[0]->point()[0] + final_k * vp[1]->point()[0];
+				v(1, 0) = (1 - final_k) * vp[0]->point()[1] + final_k * vp[1]->point()[1];
+				v(2, 0) = (1 - final_k) * vp[0]->point()[2] + final_k * vp[1]->point()[2];
+				v(3, 0) = 1;
+				return v;
+			}
+			else
+			{
+				cout << "error in k! \n";
+				return NULL;
+			}
+		}
 	}
 }
 
