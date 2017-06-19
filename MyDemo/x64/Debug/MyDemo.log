@@ -1,0 +1,23 @@
+﻿Build started 2017/6/19 13:01:30.
+     1>Project "H:\Projects\MeshSimplification-QEM\MyDemo\MyDemo.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         H:\vs2013\VC\bin\x86_amd64\CL.exe /c /I..\MeshLib\core /I..\Eigen\ /Zi /nologo /W3 /WX- /sdl /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt main.cpp
+         main.cpp
+     1>main.cpp(110): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>main.cpp(130): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>main.cpp(131): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>main.cpp(244): warning C4305: 'initializing' : truncation from 'double' to 'GLfloat'
+     1>main.cpp(245): warning C4305: 'initializing' : truncation from 'double' to 'GLfloat'
+     1>main.cpp(251): warning C4305: 'argument' : truncation from 'double' to 'GLclampf'
+     1>h:\projects\meshsimplification-qem\mydemo\MyMesh.h(158): warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
+                 h:\projects\meshsimplification-qem\mydemo\MyMesh.h(144) : while compiling class template member function 'void MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::output_mesh_info(void)'
+                 main.cpp(448) : see reference to function template instantiation 'void MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::output_mesh_info(void)' being compiled
+                 main.cpp(22) : see reference to class template instantiation 'MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>' being compiled
+       Link:
+         H:\vs2013\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"H:\Projects\MeshSimplification-QEM\x64\Debug\MyDemo.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"H:\Projects\MeshSimplification-QEM\x64\Debug\MyDemo.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"H:\Projects\MeshSimplification-QEM\x64\Debug\MyDemo.lib" /MACHINE:X64 x64\Debug\main.obj
+         MyDemo.vcxproj -> H:\Projects\MeshSimplification-QEM\x64\Debug\MyDemo.exe
+     1>Done Building Project "H:\Projects\MeshSimplification-QEM\MyDemo\MyDemo.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:06.70
