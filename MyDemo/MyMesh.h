@@ -257,8 +257,8 @@ namespace MeshLib
 	template<typename V, typename E, typename F, typename H>
 	vector<F *> MyMesh<V, E, F, H>::faces_around_vertex(V * pV)
 	{
-		H * pH = pV->halfedge();
-		H * pH_next = pH->he_next()->he_sym();
+		H * pH = (H *)pV->halfedge();
+		H * pH_next = (H *)pH->he_next()->he_sym();
 		vector<F *> facesVec;
 		facesVec.push_back(pH->face());
 		//traverse all faces, pV->halfedge() is a most ccw in-coming halfedge
@@ -277,9 +277,9 @@ namespace MeshLib
 		MatrixXd x(1, 4);
 		MatrixXd A(3, 4);
 		
-		V * pV1 = pF->halfedge()->source();
-		V * pV2 = pF->halfedge()->target();
-		V * pV3 = pF->halfedge()->next()->target();
+		V * pV1 = (V *)pF->halfedge()->source();
+		V * pV2 = (V *)pF->halfedge()->target();
+		V * pV3 = (V *)pF->halfedge()->next()->target();
 		//construct A matrix
 		A << pV1->point()[0], pV1->point()[1], pV1->point()[2], 1,
 			pV2->point()[0], pV2->point()[1], pV2->point()[2], 1,
@@ -393,28 +393,28 @@ namespace MeshLib
 		vp[0]->point()[2] = v(2, 0);
 		if (vp.isEdge())
 		{
-			E * e = vertexEdge(vp[0], vp[1]);
+			E * e = (E *)vertexEdge(vp[0], vp[1]);
 			
 			//find the halfedge with source being vp[0] and target being vp[1]
 			H * h;
 			if (e->halfedges(0)->source() == vp[0])
-				h = e->halfedges(0);
+				h = (H *)e->halfedges(0);
 			else if (e->halfedges(1) != NULL)
-				h = e->halfedges(1);
+				h = (H *)e->halfedges(1);
 			else //former operation makes sure there is a halfedge vp[0]->vp[1]
 			{
 				cout << "error in halfedge\n";
 				return;
 			}
-			H * h_prev = h->he_prev();
-			H * h_next = h->he_next();
+			H * h_prev = (H *)h->he_prev();
+			H * h_next = (H *)h->he_next();
 
 			//remove vp[1]
 			//m_edges in vp[1] to vp[0]
 			if (vp[0]->id() > vp[1]->id())
 				vp[0]->edges().remove(e);
-			H * hvp1 = vp[1]->halfedge();
-			H * hvp1_next = hvp1->he_next()->he_sym();
+			H * hvp1 = (H *)vp[1]->halfedge();
+			H * hvp1_next = (H *)hvp1->he_next()->he_sym();
 			if (hvp1->source() != vp[0] && hvp1->source() != h_next->target())
 			{
 				if (h->he_sym() == NULL && hvp1->source()->id() < vp[0]->id()) //boundary
@@ -435,10 +435,10 @@ namespace MeshLib
 			}
 
 			//set all in and out halfedges of vp[1] to vp[0]
-			H * h_in_vp1 = vp[1]->halfedge();
-			H * h_out_vp1 = h_in_vp1->he_sym();
-			H * h_out_vp1_next = h_out_vp1->he_next()->he_sym();
-			H * h_in_vp1_next = h_in_vp1->he_next()->he_sym();
+			H * h_in_vp1 = (H *)vp[1]->halfedge();
+			H * h_out_vp1 = (H *)h_in_vp1->he_sym();
+			H * h_out_vp1_next = (H *)h_out_vp1->he_next()->he_sym();
+			H * h_in_vp1_next = (H *)h_in_vp1->he_next()->he_sym();
 			h_in_vp1->target() = vp[0];
 			while (he_in_vp1_next != he_in_vp1 && he_in_vp1_next != NULL)
 			{
@@ -512,8 +512,8 @@ namespace MeshLib
 		}
 		else //if vp[0] vp[1] don't share an edge vp[1] must be on boundary
 		{
-			H * hvp1 = vp[1]->halfedge();//most ccwly in-coming halfedge must be on boundary
-			H * hvp1_next = hvp1->he_next()->he_sym();
+			H * hvp1 = (H *)vp[1]->halfedge();//most ccwly in-coming halfedge must be on boundary
+			H * hvp1_next = (H *)hvp1->he_next()->he_sym();
 			//m_edges
 			if (hvp1->source()->id() < vp[0]->id())
 				vp[0]->edges().insert(hvp1->source());
@@ -545,8 +545,8 @@ namespace MeshLib
 		for (MeshEdgeIterator eiter(this); !eiter.end(); ++eiter)//all valid pairs on edge
 		{
 			E * pE = *eiter;
-			V * v1 = pE->halfedge(0)->source();
-			V * v2 = pE->halfedge(1)->target();
+			V * v1 = (V *)pE->halfedge(0)->source();
+			V * v2 = (V *)pE->halfedge(1)->target();
 			ValidPair * vp = new ValidPair(v1, v2);
 			MatrixXd v = after_contraction(*vp);
 			vp->setCost(compute_cost(v, compute_error(v1) + compute_error(v2)));
