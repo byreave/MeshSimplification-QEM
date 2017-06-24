@@ -1,0 +1,30 @@
+﻿生成启动时间为 2017/6/24 21:49:02。
+     1>项目“H:\projects\MeshSimplification-QEM\MyDemo\MyDemo.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         F:\VS2013\VC\bin\CL.exe /c /I..\MeshLib\core /I..\Eigen /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+     1>f:\vs2013\vc\include\eigen\src\core\arch\cuda\half.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+     1>h:\projects\meshsimplification-qem\mydemo\mymesh.h(223): warning C4018: “<”: 有符号/无符号不匹配
+     1>h:\projects\meshsimplification-qem\mydemo\mymesh.h(226): warning C4390: “;”: 找到空的受控语句；这是否是有意的?
+     1>h:\projects\meshsimplification-qem\mydemo\mymesh.h(233): warning C4018: “<”: 有符号/无符号不匹配
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(110): warning C4244: “参数”: 从“double”转换到“GLfloat”，可能丢失数据
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(130): warning C4244: “参数”: 从“double”转换到“GLfloat”，可能丢失数据
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(131): warning C4244: “参数”: 从“double”转换到“GLfloat”，可能丢失数据
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(244): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(245): warning C4305: “初始化”: 从“double”到“GLfloat”截断
+     1>h:\projects\meshsimplification-qem\mydemo\main.cpp(251): warning C4305: “参数”: 从“double”到“GLclampf”截断
+     1>h:\projects\meshsimplification-qem\mydemo\mymesh.h(367): warning C4018: “<”: 有符号/无符号不匹配
+                 h:\projects\meshsimplification-qem\mydemo\mymesh.h(307): 编译类 模板 成员函数“void MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::test_iterator(void)”时
+                 h:\projects\meshsimplification-qem\mydemo\main.cpp(449): 参见对正在编译的函数 模板 实例化“void MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::test_iterator(void)”的引用
+                 h:\projects\meshsimplification-qem\mydemo\mymesh.h(252): 参见对正在编译的类 模板 实例化“MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>”的引用
+     1>h:\projects\meshsimplification-qem\mydemo\mymesh.h(476): warning C4305: “+=”: 从“double”到“float”截断
+                 h:\projects\meshsimplification-qem\mydemo\mymesh.h(452): 编译类 模板 成员函数“Eigen::MatrixXd MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::after_contraction(MeshLib::ValidPair)”时
+                 h:\projects\meshsimplification-qem\mydemo\mymesh.h(252): 参见对正在编译的函数 模板 实例化“Eigen::MatrixXd MeshLib::MyMesh<MeshLib::CMyVertex,MeshLib::CMyEdge,MeshLib::CMyFace,MeshLib::CMyHalfEdge>::after_contraction(MeshLib::ValidPair)”的引用
+       Link:
+         F:\VS2013\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"H:\projects\MeshSimplification-QEM\MyDemo\Debug\MyDemo.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"H:\projects\MeshSimplification-QEM\MyDemo\Debug\MyDemo.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"H:\projects\MeshSimplification-QEM\MyDemo\Debug\MyDemo.lib" /MACHINE:X86 Debug\main.obj
+         MyDemo.vcxproj -> H:\projects\MeshSimplification-QEM\MyDemo\Debug\MyDemo.exe
+     1>已完成生成项目“H:\projects\MeshSimplification-QEM\MyDemo\MyDemo.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:04.44
