@@ -125,6 +125,7 @@ namespace MeshLib
 			m_vertex[1] = v2;
 			is_edge = isedge;
 		}
+		ValidPair(){}
 		~ValidPair(){}
 		friend bool operator < (const ValidPair & vp1, const ValidPair & vp2)
 		{
@@ -150,12 +151,18 @@ namespace MeshLib
 			assert(i >= 0 && i < 2);
 			return m_vertex[i];
 		}
+		void setVertex(int i, CVertex * v)
+		{
+			assert(i >= 0 && i < 2);
+			m_vertex[i] = v;
+		}
 		void swap()
 		{
 			CVertex * tmp = m_vertex[0];
 			m_vertex[0] = m_vertex[1];
 			m_vertex[1] = tmp;
 		}
+		double getCost(){ return cost; }
 	private:
 		CVertex * m_vertex[2];
 		double cost;
@@ -194,7 +201,7 @@ namespace MeshLib
 		static MatrixXd compute_error(V * pV);
 		static double compute_cost(MatrixXd v, MatrixXd mQ);
 		static MatrixXd after_contraction(ValidPair vp);
-		void contract_valid_pair(ValidPair vp);
+		bool contract_valid_pair(ValidPair vp);
 		void QEM(double threshold, int times);
 	};
 
@@ -202,27 +209,27 @@ namespace MeshLib
 
 	class MyPriorityQueue{
 	private:
-		vector<ValidPair *> data;
+		vector<ValidPair> data;
 
 	public:
-		void push(ValidPair * vp){
+		void push(ValidPair vp){
 			data.push_back(vp);
-			push_heap(data.begin(), data.end(), greater<ValidPair*>()); //min heap
+			push_heap(data.begin(), data.end(), greater<ValidPair>()); //min heap
 		}
 
 		void pop(){
-			pop_heap(data.begin(), data.end(), greater<ValidPair*>());
+			pop_heap(data.begin(), data.end(), greater<ValidPair>());
 			data.pop_back();
 		}
 
-		ValidPair * top() { return data.front(); }
+		ValidPair top() { return data.front(); }
 		int size() { return data.size(); }
 		bool empty() { return data.empty(); }
 		bool hasPair(ValidPair * vp)
 		{
 			for (int i = 0; i < data.size(); ++i)
 			{
-				if (data[i]->equal(*vp));
+				if (data[i].equal(*vp));
 					return true;
 			}
 			return false;
@@ -232,47 +239,47 @@ namespace MeshLib
 			//find all pair consists of v1
 			for (int i = 0; i < data.size(); ++i)
 			{
-				if (data[i]->vertex(0) == v1)
+				if (data[i].vertex(0) == v1)
 				{
-					ValidPair * vp = new ValidPair(v2, data[i]->vertex(1));
-					for (vector<ValidPair*>::iterator it = data.begin(); it != data.end();) //remove all duplicate paira
+					ValidPair * vp = new ValidPair(v2, data[i].vertex(1));
+					for (vector<ValidPair>::iterator it = data.begin(); it != data.end();) //remove all duplicate paira
 					{
-						ValidPair * itvp = *it;
-						if (itvp->equal(*vp))
+						ValidPair itvp = *it;
+						if (itvp.equal(*vp))
 						{
 							it = data.erase(it);
-							make_heap(data.begin(), data.end(), greater<ValidPair *>());
+							make_heap(data.begin(), data.end(), greater<ValidPair>());
 						}
 						else
 							it++;
 					}
 					delete vp;
 					vp = NULL;
-					data[i]->vertex(0) = v2;
-					MatrixXd v = CMyMesh::after_contraction(*data[i]);
-					data[i]->setCost(CMyMesh::compute_cost(v, CMyMesh::compute_error((CMyVertex *)v2) + CMyMesh::compute_error((CMyVertex *)data[i]->vertex(1))));
-					make_heap(data.begin(), data.end(), greater<ValidPair *>());
+					data[i].setVertex(0, v2);
+					MatrixXd v = CMyMesh::after_contraction(data[i]);
+					data[i].setCost(CMyMesh::compute_cost(v, CMyMesh::compute_error((CMyVertex *)v2) + CMyMesh::compute_error((CMyVertex *)data[i].vertex(1))));
+					make_heap(data.begin(), data.end(), greater<ValidPair>());
 				}
-				else if (data[i]->vertex(1) == v1)
+				else if (data[i].vertex(1) == v1)
 				{
-					ValidPair * vp = new ValidPair(v2, data[i]->vertex(0));
-					for (vector<ValidPair*>::iterator it = data.begin(); it != data.end();) //remove all duplicate paira
+					ValidPair * vp = new ValidPair(v2, data[i].vertex(0));
+					for (vector<ValidPair>::iterator it = data.begin(); it != data.end();) //remove all duplicate paira
 					{
-						ValidPair * itvp = *it;
-						if (itvp->equal(*vp))
+						ValidPair itvp = *it;
+						if (itvp.equal(*vp))
 						{
 							it = data.erase(it);
-							make_heap(data.begin(), data.end(), greater<ValidPair *>());
+							make_heap(data.begin(), data.end(), greater<ValidPair>());
 						}
 						else
 							it++;
 					}
 					delete vp;
 					vp = NULL;
-					data[i]->vertex(1) = v2;
-					MatrixXd v = CMyMesh::after_contraction(*data[i]);
-					data[i]->setCost(CMyMesh::compute_cost(v, CMyMesh::compute_error((CMyVertex *)v2) + CMyMesh::compute_error((CMyVertex *)data[i]->vertex(0))));
-					make_heap(data.begin(), data.end(), greater<ValidPair *>());
+					data[i].setVertex(1, v2);
+					MatrixXd v = CMyMesh::after_contraction(data[i]);
+					data[i].setCost(CMyMesh::compute_cost(v, CMyMesh::compute_error((CMyVertex *)v2) + CMyMesh::compute_error((CMyVertex *)data[i].vertex(0))));
+					make_heap(data.begin(), data.end(), greater<ValidPair>());
 				}
 				else
 					continue;
@@ -352,32 +359,33 @@ namespace MeshLib
 			// ...
 		}
 
-		V * pV = idVertex(352);
+		V * pV = idVertex(264);
+		std::cout << pV->edges().size();
+
 		H * pH = (H *)pV->halfedge();
 		H * pH_next = (H *)pH->he_next()->he_sym();
-		vector<F *> facesVec;
-		facesVec.push_back((F *)pH->face());
-		//traverse all faces, pV->halfedge() is a most ccw in-coming halfedge
-		//thus we don't need traverse clwly
+		cout << pH->source()->id() << endl;
 		while (pH_next != NULL && pH_next != pH)
 		{
-			facesVec.push_back((F *)pH_next->face());
+			cout << pH_next->source()->id() << endl;
 			pH_next = (H *)pH_next->he_next()->he_sym();
 		}
-		for (int i = 0; i < facesVec.size(); ++i)
-			cout << facesVec[i]->id() << endl;
-		std::cout << facesVec.size() << endl;
-
 		//there are some other iterators which you can find them in class MyMesh
 
+		
 		std::cout << "Iterators test OK.\n";
 	}
 	template<typename V, typename E, typename F, typename H>
 	vector<F *> MyMesh<V, E, F, H>::faces_around_vertex(V * pV)
 	{
 		H * pH = (H *)pV->halfedge();
-		H * pH_next = (H *)pH->he_next()->he_sym();
+		H * pH_next;
+		
 		vector<F *> facesVec;
+		if (pH != NULL)
+			pH_next = (H *)pH->he_next()->he_sym();
+		else
+			return facesVec;
 		facesVec.push_back((F *)pH->face());
 		//traverse all faces, pV->halfedge() is a most ccw in-coming halfedge
 		//thus we don't need traverse clwly
@@ -407,6 +415,8 @@ namespace MeshLib
 		//normalize x to let a^2 + b^2 + c^2 = 1
 		//note that in eigen matrix starts at 0, not 1
 		double sum = x(0, 0) * x(0, 0) + x(1, 0) * x(1, 0) + x(1, 0) * x(1, 0);
+		if (sum == 0)
+			return MatrixXd::Zero(4, 1);
 		x /= sqrt(sum);
 
 		return x;
@@ -450,7 +460,10 @@ namespace MeshLib
 	template<typename V, typename E, typename F, typename H>
 	MatrixXd MyMesh<V, E, F, H>::after_contraction(ValidPair vp)
 	{
-		MatrixXd mQ = compute_error((V *)vp[0]) + compute_error((V *)vp[1]);
+		MatrixXd Q1 = compute_error((V *)vp[0]);
+		MatrixXd Q2 = compute_error((V *)vp[1]);
+
+		MatrixXd mQ = Q1 + Q2;
 		MatrixXd v(4, 1);
 		MatrixXd A(4, 4);
 		MatrixXd B(4, 1);
@@ -462,15 +475,26 @@ namespace MeshLib
 		//if A is invertible
 		if (A.determinant() != 0)
 		{
+			cout << "SOLVE" << endl;
 			//construct B
 			B << 0, 0, 0, 1;
 			//solve the equation Ax = B
 			v = A.lu().solve(B);
+			//cout << "v=" << v << endl;
+			if (_isnan(v(0, 0)) != 0)
+			{
+				cout << "Eception occured" << vp[0]->id() << ' ' << vp[1]->id() << endl;
+				cout << Q1 << endl;
+				
+				assert(1 < 0);
+			}
 			return v;
 		}
 		else //If the matrix is not invertible, then we can simply choose the optimal v
 			//along the segment v1 v2.
 		{
+			cout << "INTER" << endl;
+
 			double cost = 100000.0;
 			float final_k = -1.0;
 			for (float k = 0; k <= 1; k += 0.05)
@@ -503,14 +527,82 @@ namespace MeshLib
 		}
 	}
 	template<typename V, typename E, typename F, typename H>
-	void MyMesh<V, E, F, H>::contract_valid_pair(ValidPair vp)
+	bool MyMesh<V, E, F, H>::contract_valid_pair(ValidPair vp)
 	{
 		MatrixXd v = after_contraction(vp); //get position after contraction
 		vp[0]->point()[0] = v(0, 0);
 		vp[0]->point()[1] = v(1, 0);
 		vp[0]->point()[2] = v(2, 0);
+
+		
+
+		cout <<"after con :"<< v << endl;
 		if (vp.isEdge())
 		{
+			///new///
+			if (vp[0]->boundary() && !vp[1]->boundary())
+			{
+				E * e = (E *)vertexEdge((V *)vp[0], (V *)vp[1]);
+
+				//find the halfedge with source being vp[0] and target being vp[1]
+				H * h;
+				if (e->halfedge(0)->source() == vp[0])
+					h = (H *)e->halfedge(0);
+				else if (e->halfedge(1) != NULL)
+					h = (H *)e->halfedge(1);
+
+				//vertex
+				//m_edges
+				if (vp[0]->id() < vp[1]->id())
+					vp[0]->edges().remove(e);
+				H * pH1 = vp[1]->halfedge();
+				if (pH1->source()->id() > vp[0]->id())
+					vp[0]->edges().push_back(pH1->edge());
+				H * pH1_next = pH1->he_next()->he_sym();
+				while (pH1_next != pH1)
+				{
+					if (pH1_next->source()->id() > vp[0]->id())
+						vp[0]->edges().push_back(pH1_next->edge());
+					pH1_next = pH1_next->he_next()->he_sym();
+				}
+				//halfedge
+				if (vp[0]->halfedge() == h->prev())
+					vp[0]->halfedge() = h->he_next()->he_sym();
+				if (h->->he_sym()->he_next()->target()->halfedge() == h->he_sym()->he_next())
+					h->he_next()->target()->halfedge() = h->he_sym()->he_prev()->he_sym();
+				//target
+				pH1_next = pH1->he_next()->he_sym();
+				pH1->target() = vp[0];
+				while (pH1_next != pH1)
+				{
+					pH1_next->target() = vp[0];
+				}
+
+				m_verts.remove((V*)vp[1]);
+				std::map<int, V*>::iterator viter = m_map_vert.find(vp[1]->id());
+				if (viter != m_map_vert.end())
+				{
+					m_map_vert.erase(viter);
+				}
+				
+
+				//edge
+				//halfedges
+				if (h->he_prev()->edge()->halfedge(0) == h->he_prev())
+					h->he_prev()->edge()->halfedge(0) = h->he_next()->he_sym();
+				else
+					h->he_prev()->edge()->halfedge(1) = h->he_next()->he_sym();
+				h->he_next()->he_sym()->edge() = h->he_prev()->edge();
+				if (h->he_sym()->he_next()->edge()->halfedge(0) == h->he_sym()->he_next())
+					h->he_sym()->he_next()->edge()->halfedge(0) = h->he_sym()->he_prev()->he_sym();
+				else
+					h->he_sym()->he_next()->edge()->halfedge(1) = h->he_sym()->he_prev()->he_sym();
+				h->he_sym()->he_prev()->he_sym()->edge() = h->he_sym()->he_next()->edge();
+			}
+
+
+
+			///new///
 			E * e = (E *)vertexEdge((V *)vp[0], (V *)vp[1]);
 			
 			//find the halfedge with source being vp[0] and target being vp[1]
@@ -522,7 +614,14 @@ namespace MeshLib
 			else //former operation makes sure there is a halfedge vp[0]->vp[1]
 			{
 				cout << "error in halfedge\n";
-				return;
+				return false;
+			}
+			if (vp[1]->boundary())
+			{
+				if (!vp[0]->boundary())
+					vp[0]->boundary() = true;
+				else //in case a single edge comes up after contraction
+					return false;
 			}
 			H * h_prev = (H *)h->he_prev();
 			H * h_next = (H *)h->he_next();
@@ -531,6 +630,16 @@ namespace MeshLib
 			//m_edges in vp[1] to vp[0]
 			if (vp[0]->id() < vp[1]->id())
 				vp[0]->edges().remove(e);
+
+			if (h_next->target()->id() < vp[1]->id())
+				h_next->target()->edges().remove(h_next->edge());
+
+			if (h->he_sym() != NULL)
+			{
+				if (h->he_sym()->he_next()->target()->id() < vp[1]->id())
+					h->he_sym()->he_next()->target()->edges().remove(h->he_sym()->he_prev()->edge());
+
+			}
 			H * hvp1 = (H *)vp[1]->halfedge();
 			H * hvp1_next = (H *)hvp1->he_next()->he_sym();
 			if (hvp1->source() != vp[0] && hvp1->source() != h_next->target())
@@ -539,12 +648,7 @@ namespace MeshLib
 					vp[0]->edges().push_back(hvp1->edge());
 				else if (h->he_sym() != NULL && hvp1->source() != h->he_sym()->he_next()->target() && hvp1->source()->id() > vp[0]->id())
 					vp[0]->edges().push_back(hvp1->edge());
-				else if (h->he_sym() != NULL && hvp1->source() == h->he_sym()->he_next()->target() && hvp1->source()->id() < vp[0]->id())
-					hvp1->source()->edges().remove(hvp1->edge());
-			}
-			else if (hvp1->source() == h_next->target() && hvp1->source()->id() < vp[0]->id())
-			{
-				h_next->target()->edges().remove(h_next->edge());
+				
 			}
 			while (hvp1_next != NULL && hvp1_next != hvp1)
 			{
@@ -554,12 +658,6 @@ namespace MeshLib
 						vp[0]->edges().push_back(hvp1_next->edge());
 					else if (h->he_sym() != NULL && hvp1_next->source() != h->he_sym()->he_next()->target() && hvp1_next->source()->id() > vp[0]->id())
 						vp[0]->edges().push_back(hvp1_next->edge());
-					else if (h->he_sym() != NULL && hvp1_next->source() == h->he_sym()->he_next()->target() && hvp1_next->source()->id() < vp[0]->id())
-						hvp1_next->source()->edges().remove(hvp1_next->edge());
-				}
-				else if (hvp1_next->source() == h_next->target() && hvp1_next->source()->id() < vp[0]->id())
-				{
-					h_next->target()->edges().remove(h_next->edge());
 				}
 				hvp1_next = (H *)hvp1_next->he_next()->he_sym();
 			}
@@ -590,12 +688,38 @@ namespace MeshLib
 			m_verts.remove((V *)vp[1]);//delete vp[1]; don't delete the memory because we need maintain the heap, see more in QEM()
 
 			//edges
-			if (h_prev->edge()->halfedge(0) == h_prev)
-				h_prev->edge()->halfedge(0) = h_next->he_sym();
-			else
+			H * h_prev_sym = (H *)h_prev->he_sym();
+			if (h_prev->edge()->halfedge(0) == h_prev && h_prev->edge()->halfedge(1) != NULL)
+			{
+				h_prev->edge()->halfedge(0) = h_prev->edge()->halfedge(1);
 				h_prev->edge()->halfedge(1) = h_next->he_sym();
-			h_next->he_sym()->edge() = h_prev->edge();
+
+			}
+			else if (h_prev->edge()->halfedge(0) != h_prev)
+				h_prev->edge()->halfedge(1) = h_next->he_sym();
+			else if (h_prev->edge()->halfedge(0) == h_prev && h_prev->edge()->halfedge(1) == NULL)
+				h_prev->edge()->halfedge(0) = h_next->he_sym();
+			if (h_next->he_sym() != NULL) //not boundary
+				h_next->he_sym()->edge() = h_prev->edge();
 			m_edges.remove((E *)h_next->edge());
+
+			if (h_next->target()->halfedge() == h_next)
+				h_next->target()->halfedge() = h_prev_sym;
+			if (h_prev->target()->halfedge() == h_prev && h_next->he_sym() != NULL)
+				h_prev->target()->halfedge() = h_next->he_sym();
+			else if (h_prev->target()->halfedge() == h_prev && h_next->he_sym() == NULL)
+			{
+				h_prev->target()->halfedge() =h_prev_sym->he_prev();
+			}
+			else if (h->he_sym() != NULL && h_prev->target()->halfedge() == h->he_sym() && h_next->he_sym() != NULL)
+			{
+				h_prev->target()->halfedge() = h_next->he_sym();
+			}
+			else if (h->he_sym() != NULL && h_prev->target()->halfedge() == h->he_sym() && h_next->he_sym() == NULL)
+			{
+				h_prev->target()->halfedge() = h_prev_sym->he_prev();
+			}
+			
 			delete h_next->edge();
 			h_next->edge() = NULL;
 			delete h_prev;
@@ -609,13 +733,25 @@ namespace MeshLib
 				h = (H *)h->he_sym();
 				h_prev = (H *)h->he_prev();
 				h_next = (H *)h->he_next();
+				H * h_next_sym = (H *)h_next->he_sym();
 				//edges same as above
-				if (h_next->edge()->halfedge(0) == h_next)
-					h_next->edge()->halfedge(0) = h_prev->he_sym();
-				else
+				if (h_next->edge()->halfedge(0) == h_next && h_next->edge()->halfedge(1) != NULL)
+				{
+					h_next->edge()->halfedge(0) = h_next->edge()->halfedge(1);
 					h_next->edge()->halfedge(1) = h_prev->he_sym();
-				h_prev->he_sym()->edge() = h_next->edge();
+				}
+				else if (h_next->edge()->halfedge(0) != h_next)
+					h_next->edge()->halfedge(1) = h_prev->he_sym();
+				else if (h_next->edge()->halfedge(0) == h_next && h_next->edge()->halfedge(1) == NULL)
+					h_next->edge()->halfedge(0) = h_prev->he_sym();
+				if (h_prev->he_sym() != NULL)
+					h_prev->he_sym()->edge() = h_next->edge();
 				m_edges.remove((E *)h_prev->edge());
+
+				if (h_next->target()->halfedge() == h_next && h_prev->he_sym() != NULL)
+					h_next->target()->halfedge() = h_prev->he_sym();
+				else if (h_next->target()->halfedge() == h_next && h_prev->he_sym() == NULL)
+					h_next->target()->halfedge() = h_next_sym->he_prev();
 				delete h_prev->edge();
 				h_prev->edge() = NULL;
 				delete h_next;
@@ -629,8 +765,10 @@ namespace MeshLib
 			if (fiter != m_map_face.end())
 			{
 				m_map_face.erase(fiter);
+				m_faces.remove((F *)h->face());
+
+				delete h->face();
 			}
-			m_faces.remove((F *)h->face());
 			
 			if (h->he_sym() != NULL)
 			{
@@ -639,8 +777,10 @@ namespace MeshLib
 				if (fiter != m_map_face.end())
 				{
 					m_map_face.erase(fiter);
+					m_faces.remove((F *)h->face());
+
+					delete h->face();
 				}
-				m_faces.remove((F *)h->face());
 				
 				delete h->he_sym();
 			}
@@ -677,6 +817,7 @@ namespace MeshLib
 			}
 			m_verts.remove((V *)vp[1]);//delete vp[1];
 		}
+		return true;
 	}
 	template<typename V, typename E, typename F, typename H>
 	void MyMesh<V, E, F, H>::QEM(double threshold, int times)
@@ -690,7 +831,8 @@ namespace MeshLib
 			ValidPair * vp = new ValidPair(v1, v2);
 			MatrixXd v = after_contraction(*vp);
 			vp->setCost(compute_cost(v, compute_error(v1) + compute_error(v2)));
-			heap.push(vp);
+				
+			heap.push(*vp);
 		}
 
 		//add valid pairs that are not on edge
@@ -710,21 +852,30 @@ namespace MeshLib
 						if (cost <= threshold)
 						{
 							vp->setCost(cost);
-							heap.push(vp);
+							heap.push(*vp);
 						}
 					}
 				}
 			}
 		}
+		ValidPair vp;
 		//contraction of valid pairs with minimum cost for (times) times
-		for (int i = 0; i < times || !heap.empty(); ++i)
+		for (int i = 0; i < times && !heap.empty(); ++i)
 		{
-			ValidPair * vp = heap.top();
-			contract_valid_pair(*vp);
-			heap.pop();
-			//change all changed pairs of the deleted vertex to the pair of remaining vertex and delete duplicate pairs
-			heap.changeV1toV2((*vp)[1], (*vp)[0]);
-			//delete vp[1];
+			vp = heap.top();
+			if (contract_valid_pair(vp))
+			{
+				//cout << vp.getCost() << endl;
+				cout << vp[0]->id() << ' ' << vp[1]->id() << endl;
+				heap.pop();
+				//change all changed pairs of the deleted vertex to the pair of remaining vertex and delete duplicate pairs
+				heap.changeV1toV2(vp[1], vp[0]);
+				//delete vp[1];
+			}
+			else
+			{
+				heap.pop();
+			}
 		}
 	}
 }

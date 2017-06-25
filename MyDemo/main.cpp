@@ -447,7 +447,7 @@ int main(int argc, char * argv[])
 
 	mesh.output_mesh_info();
 	mesh.test_iterator();
-	mesh.QEM(0.05, 200);
+	mesh.QEM(0.05, 100);
 	mesh.output_mesh_info();
 
 	init_openGL(argc, argv);
